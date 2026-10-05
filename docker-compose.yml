@@ -1,0 +1,43 @@
+services:
+  # 1. The Database
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=linkgpt
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. The AI Engine
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      # This volume ensures you don't re-download the 0.5B model every time
+      - ollama_models:/root/.ollama
+
+ 
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=linkgpt
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - postgres
+      - ollama
+
+# Defines the persistent hard drives for the containers
+volumes:
+  postgres_data:
+  ollama_models:
